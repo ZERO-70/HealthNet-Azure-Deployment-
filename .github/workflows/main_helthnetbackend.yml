@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy JAR app to Azure Web App - HelthNetBackend
+name: Build and deploy JAR app to Azure Web App - HealthNetBackend
 
 on:
   push:
@@ -13,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # Required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +18,7 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v4
         with:
-          java-version: 'java21'
+          java-version: '21'         # Specify just the version number
           distribution: 'microsoft'
 
       - name: Build with Maven
@@ -31,17 +28,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          # Use a relative path so that when downloaded the jar is in the current directory.
+          path: target/*.jar
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    # Remove the dynamic URL from the environment as it isn’t available yet.
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # Required for requesting the JWT
-      contents: read # Required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -60,6 +58,8 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'HelthNetBackend' # Replace with your Azure Web App name
+          app-name: 'HealthNetBackend'   # Double-check that this matches your actual app name
+          # If you’re not using a deployment slot, you can remove this line.
           slot-name: 'Production'
+          # Specify the actual jar file path – if downloaded, it might now be in the workspace root.
           package: '*.jar'
